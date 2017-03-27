@@ -21,7 +21,7 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ('id', 'date', 'report_entries')
+        fields = ('id', 'date', 'unit', 'report_entries')
 
     def create(self, validated_data):
         return Report.objects.create(**validated_data)

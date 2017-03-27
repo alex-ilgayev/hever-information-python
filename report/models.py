@@ -29,7 +29,7 @@ class Person(models.Model):
 
 
 class Report(models.Model):
-    date = models.DateField(auto_now=True)
+    date = models.DateField()
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
     def __str__(self):

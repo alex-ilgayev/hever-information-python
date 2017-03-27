@@ -9,12 +9,32 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
+from datetime import date
+
+
+class ReportToday(APIView):
+
+    def get(self, request, format=None):
+        reports = Report.objects.all().filter(date=date.today())
+        unit_id = request.GET.get('unit')
+        if unit_id is None or not unit_id.isdigit():
+            return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
+        unit = Unit.objects.all().filter(id=unit_id)
+        if unit is None or len(unit) < 1:
+            return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
+        unit = unit[0]
+        reports = Report.objects.all().filter(unit=unit_id).filter(date=date.today())
+        if len(reports) == 0:
+            reports = [Report.objects.create(date=date.today(), unit=unit)]
+        serializer = ReportSerializer(reports, many=True)
+        return Response(serializer.data)
 
 
 class ReportList(APIView):
 
     def get(self, request, format=None):
         reports = Report.objects.all()
+        print(request.data)
         serializer = ReportSerializer(reports, many=True)
         return Response(serializer.data)
 

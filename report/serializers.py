@@ -17,7 +17,7 @@ class PersonSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    
+
 class ReportEntrySerializer(serializers.ModelSerializer):
     person = PersonSerializer()
 

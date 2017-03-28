@@ -24,10 +24,11 @@ class ReportToday(APIView):
         chosen_unit = Unit.objects.all().filter(id=unit_id)
         if chosen_unit is None or len(chosen_unit) < 1:
             return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
+        chosen_unit = chosen_unit[0]
 
         single_report = Report.objects.all().filter(unit=unit_id).filter(date=date.today())
         if len(single_report) == 0:
-            single_report = [Report.objects.create(date=date.today(), unit=unit)]
+            single_report = [Report.objects.create(date=date.today(), unit=chosen_unit)]
         else:
             single_report = single_report[0]
         serializer = ReportSerializer(single_report)

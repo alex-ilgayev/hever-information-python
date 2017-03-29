@@ -1,6 +1,7 @@
 from .models import *
 from rest_framework import serializers
 
+
 class PersonSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -17,9 +18,18 @@ class PersonSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+# A serializer class only for get requests.
+# contains detail for person.
+class ReportEntryGetSerializer(serializers.ModelSerializer):
+    person = PersonSerializer(read_only=True)
 
+    class Meta:
+        model = ReportEntry
+        fields = ('id', 'status', 'report', 'person')
+
+# A serializer class for all other responses.
+# contain person as foreign key.
 class ReportEntrySerializer(serializers.ModelSerializer):
-    person = PersonSerializer()
 
     class Meta:
         model = ReportEntry

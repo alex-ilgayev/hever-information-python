@@ -37,7 +37,7 @@ class Report(models.Model):
 
 
 class ReportEntry(models.Model):
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, related_name='person', on_delete=models.CASCADE)
     status = models.CharField(max_length=100)
     report = models.ForeignKey(Report, related_name='report_entries', on_delete=models.CASCADE)
 

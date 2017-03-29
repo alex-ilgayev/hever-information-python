@@ -86,7 +86,7 @@ class ReportEntryList(APIView):
     """
     def get(self, request, format=None):
         report_entries = ReportEntry.objects.all()
-        serializer = ReportEntrySerializer(report_entries, many=True)
+        serializer = ReportEntryGetSerializer(report_entries, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):

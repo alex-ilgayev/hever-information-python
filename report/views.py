@@ -15,8 +15,6 @@ from datetime import date
 class ReportToday(APIView):
 
     def get(self, request, format=None):
-        all_reports = Report.objects.all().filter(date=date.today())
-
         unit_id = request.GET.get('unit')
         if unit_id is None or not unit_id.isdigit():
             return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
@@ -28,7 +26,12 @@ class ReportToday(APIView):
 
         single_report = Report.objects.all().filter(unit=unit_id).filter(date=date.today())
         if len(single_report) == 0:
+            # if no report for today is made yet, making one, and adding all relevant people with NOT_SET status.
             single_report = [Report.objects.create(date=date.today(), unit=chosen_unit)]
+            single_report = single_report[0]
+            persons = Person.objects.all().filter(unit_id=unit_id)
+            for person in persons:
+                ReportEntry.objects.create(person=person, status='NOT_SET', report=single_report)
         else:
             single_report = single_report[0]
         serializer = ReportSerializer(single_report)
@@ -39,7 +42,6 @@ class ReportList(APIView):
 
     def get(self, request, format=None):
         reports = Report.objects.all()
-        print(request.data)
         serializer = ReportSerializer(reports, many=True)
         return Response(serializer.data)
 

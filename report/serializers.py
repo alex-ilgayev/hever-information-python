@@ -29,7 +29,7 @@ class ReportEntryGetSerializer(serializers.ModelSerializer):
 
 # A serializer class for all other responses.
 # contain person as foreign key.
-class ReportEntrySerializer(serializers.ModelSerializer):
+class ReportEntryUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReportEntry
@@ -45,7 +45,7 @@ class ReportEntrySerializer(serializers.ModelSerializer):
 
 
 class ReportSerializer(serializers.ModelSerializer):
-    report_entries = ReportEntrySerializer(many=True)
+    report_entries = ReportEntryGetSerializer(many=True)
 
     class Meta:
         model = Report

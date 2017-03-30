@@ -110,12 +110,12 @@ class ReportEntryDetail(APIView):
 
     def get(self, request, pk, format=None):
         report_entry = self.get_object(pk)
-        serializer = ReportEntrySerializer(report_entry)
+        serializer = ReportEntryUpdateSerializer(report_entry)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
         report_entry = self.get_object(pk)
-        serializer = ReportEntrySerializer(report_entry, data=request.data)
+        serializer = ReportEntryUpdateSerializer(report_entry, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

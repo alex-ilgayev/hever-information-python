@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from datetime import date
+from datetime import datetime
 
 
 class ReportToday(APIView):
@@ -41,8 +42,35 @@ class ReportToday(APIView):
 class ReportList(APIView):
 
     def get(self, request, format=None):
-        reports = Report.objects.all()
-        serializer = ReportSerializer(reports, many=True)
+        unit_id = request.GET.get('unit')
+        chosen_date = request.GET.get('date')
+
+        # if unit_id is None:
+        #     reports = Report.objects.all()
+        #     serializer = ReportSerializer(reports, many=True)
+        #     return Response(serializer.data)
+        # if not chosen_date.isdigit():
+        #     return Response('Enter date number in millie seconds format', status=status.HTTP_400_BAD_REQUEST)
+
+        reports_for_unit = Report.objects.all()
+        if unit_id is not None:
+            if not unit_id.isdigit():
+                return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
+
+            chosen_unit = Unit.objects.all().filter(id=unit_id)
+            if chosen_unit is None or len(chosen_unit) < 1:
+                return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
+
+            reports_for_unit = reports_for_unit.filter(unit=unit_id)
+
+        if chosen_date is not None:
+            if not chosen_date.isdigit():
+                return Response('Enter date number in millie seconds format', status=status.HTTP_400_BAD_REQUEST)
+
+            chosen_datetime = datetime.fromtimestamp(int(chosen_date)).strftime('%Y-%m-%d')
+            reports_for_unit = reports_for_unit.filter(date=chosen_datetime)
+
+        serializer = ReportSerializer(reports_for_unit, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):

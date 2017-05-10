@@ -45,14 +45,7 @@ class ReportList(APIView):
         unit_id = request.GET.get('unit')
         chosen_date = request.GET.get('date')
 
-        # if unit_id is None:
-        #     reports = Report.objects.all()
-        #     serializer = ReportSerializer(reports, many=True)
-        #     return Response(serializer.data)
-        # if not chosen_date.isdigit():
-        #     return Response('Enter date number in millie seconds format', status=status.HTTP_400_BAD_REQUEST)
-
-        reports_for_unit = Report.objects.all()
+        reports_returned = Report.objects.all()
         if unit_id is not None:
             if not unit_id.isdigit():
                 return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
@@ -61,16 +54,25 @@ class ReportList(APIView):
             if chosen_unit is None or len(chosen_unit) < 1:
                 return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
 
-            reports_for_unit = reports_for_unit.filter(unit=unit_id)
+            reports_returned = reports_returned.filter(unit=unit_id)
 
         if chosen_date is not None:
             if not chosen_date.isdigit():
                 return Response('Enter date number in millie seconds format', status=status.HTTP_400_BAD_REQUEST)
 
             chosen_datetime = datetime.fromtimestamp(int(chosen_date)).strftime('%Y-%m-%d')
-            reports_for_unit = reports_for_unit.filter(date=chosen_datetime)
+            reports_returned = reports_returned.filter(date=chosen_datetime)
 
-        serializer = ReportSerializer(reports_for_unit, many=True)
+        # if theres no report for given date we creating one.
+        if chosen_date is not None and unit_id is not None and len(reports_returned) == 0:
+
+            single_report = Report.objects.create(date=chosen_datetime, unit=chosen_unit[0])
+            persons = Person.objects.all().filter(unit_id=unit_id)
+            for person in persons:
+                ReportEntry.objects.create(person=person, status='NOT_SET', report=single_report)
+            reports_returned = [single_report]
+
+        serializer = ReportSerializer(reports_returned, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):

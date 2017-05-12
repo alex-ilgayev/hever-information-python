@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from django.http import Http404
 from datetime import date
 from datetime import datetime
-
+import re
 
 class ReportToday(APIView):
 
@@ -57,10 +57,29 @@ class ReportList(APIView):
             reports_returned = reports_returned.filter(unit=unit_id)
 
         if chosen_date is not None:
-            if not chosen_date.isdigit():
-                return Response('Enter date number in millie seconds format', status=status.HTTP_400_BAD_REQUEST)
+            re_result = re.search('([0-9]{2})-([0-9]{2})-([0-9]{4})', chosen_date)
+            if re_result is None:
+                return Response('Wrong date format. enter date format like: date=05-06-1970'
+                                , status=status.HTTP_400_BAD_REQUEST)
+            day = re_result.group(1)
+            month = re_result.group(2)
+            year = re_result.group(3)
 
-            chosen_datetime = datetime.fromtimestamp(int(chosen_date)).strftime('%Y-%m-%d')
+            if day is None or month is None or year is None:
+                return Response('Wrong date format. enter date format like: date=05-06-1970'
+                                , status=status.HTTP_400_BAD_REQUEST)
+
+            day = int(day)
+            month = int(month)
+            year = int(year)
+
+            if day is None or month is None or year is None:
+                return Response('Wrong date format. enter date format like: date=05-06-1970'
+                                , status=status.HTTP_400_BAD_REQUEST)
+
+            chosen_datetime = datetime(year=year, month=month, day=day)
+
+            chosen_datetime = chosen_datetime.strftime('%Y-%m-%d')
             reports_returned = reports_returned.filter(date=chosen_datetime)
 
         # if theres no report for given date we creating one.

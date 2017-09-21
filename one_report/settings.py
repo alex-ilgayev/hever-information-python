@@ -88,13 +88,23 @@ WSGI_APPLICATION = 'one_report.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'd6ik94eb3rkgo9',
+        'USER': 'eycyxwkjrbcbxs',
+        'PASSWORD': '4dacac10deb61b912d1365d3c6c81c57be7d4c45418c5e236afa26130d358d41',
+        'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
+        'PORT': '',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

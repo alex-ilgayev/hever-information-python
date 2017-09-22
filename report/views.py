@@ -174,3 +174,10 @@ class ReportEntryDetail(APIView):
         report_entry = self.get_object(pk)
         report_entry.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class UnitList(APIView):
+
+    def get(self, request, format=None):
+        units_returned = Unit.objects.all()
+        serializer = UnitSerializer(units_returned, many=True)
+        return Response(serializer.data)

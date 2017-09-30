@@ -44,7 +44,9 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', 'one-report.herokuapp.com
 
 INSTALLED_APPS = [
     'rest_framework',
+    'googleapiclient',
     'report.apps.ReportConfig',
+    'account.apps.AccountConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,7 +103,8 @@ DATABASES = {
         'NAME': 'd6ik94eb3rkgo9',
         'USER': 'eycyxwkjrbcbxs',
         'PASSWORD': '4dacac10deb61b912d1365d3c6c81c57be7d4c45418c5e236afa26130d358d41',
-        'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
+        # 'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
+        'HOST': 'localhost',
         'PORT': '',
     }
 }
@@ -147,3 +150,7 @@ STATIC_URL = '/static/'
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )
+
+LOGIN_URL = '/account/login/'
+
+GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = 'client_secrets.json'

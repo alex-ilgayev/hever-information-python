@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
 from rest_framework import viewsets
 from report.serializers import *
 from report.models import *
@@ -8,6 +9,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth.decorators import *
 from django.http import Http404
 from datetime import date
 from datetime import datetime
@@ -41,7 +43,8 @@ class ReportToday(APIView):
 
 class ReportList(APIView):
 
-    def get(self, request, format=None):
+    @method_decorator(login_required)
+    def get(self, request):
         unit_id = request.GET.get('unit')
         chosen_date = request.GET.get('date')
 

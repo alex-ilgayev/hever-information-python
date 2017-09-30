@@ -42,6 +42,7 @@ CONSTANT_PASSWORD = 'Aa123456'
 @api_view(['GET'])
 def create_user(request):
     user_name = request.GET.get('user_name')
+    next_path = request.GET.get('next')
     if user_name is None:
         return Response('please include a user name', status=status.HTTP_400_BAD_REQUEST)
 
@@ -50,6 +51,8 @@ def create_user(request):
         user.save()
     except IntegrityError:
         return Response('user name already exist', status=status.HTTP_409_CONFLICT)
+    if next_path is not None:
+        return redirect(next)
     return Response('user created successfully', status=status.HTTP_201_CREATED)
 
 
@@ -86,25 +89,31 @@ def signin(request):
         gid = jwt['sub']
         email = jwt['email']
 
-        # checks if user exists. if not, then creates.
-        exists = User.objects.all().filter(username=email).exists()
-        if not exists:
-            if next_path is not None:
-                return redirect('/account/signup/?user_name=' + email + '&next=/account/signin/?next=' + next_path)
-            else:
-                return redirect('/account/signup/?user_name=' + email)
-        # up to now validated google token id. now logs in using django auth system.
-        user = authenticate(username=email, password=CONSTANT_PASSWORD)
-
-        # shouldn't happen
-        if user is None:
-            return Response('login error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        login(request, user=user)
-        return Response('successful login to ' + str(user), status=status.HTTP_200_OK)
-
+    # failed authentication with google
     except AppIdentityError:
         return Response('google token id provided is invalid', status=status.HTTP_403_FORBIDDEN)
+
+    # checks if user exists. if not, then creates.
+    exists = User.objects.all().filter(username=email).exists()
+    if not exists:
+        if next_path is not None:
+            return redirect('/account/signup/?user_name=' + email + '&next=/account/signin/?next=' + next_path)
+        else:
+            return redirect('/account/signup/?user_name=' + email)
+    # up to now validated google token id. now logs in using django auth system.
+    user = authenticate(username=email, password=CONSTANT_PASSWORD)
+
+    # shouldn't happen
+    if user is None:
+        return Response('login error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    login(request, user=user)
+
+    # redirect
+    if next_path is not None:
+        return redirect(next)
+    return Response('successful login to ' + str(user), status=status.HTTP_200_OK)
+
 
     if next_path is None:
         return Response(status=status.HTTP_200_OK)

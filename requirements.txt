@@ -13,3 +13,4 @@ pytz==2016.10
 six==1.10.0
 virtualenv==15.1.0
 whitenoise==3.2
+google-api-python-client==1.6.4

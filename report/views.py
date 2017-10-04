@@ -1,24 +1,24 @@
-from django.shortcuts import render
-
-from django.http import HttpResponse
-from django.utils.decorators import method_decorator
-from rest_framework import viewsets
-from report.serializers import *
-from report.models import *
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth.decorators import *
-from django.http import Http404
-from datetime import date
-from datetime import datetime
 from one_report.settings import GOOGLE_TOKEN_ID
 from one_report.settings import UNIT_ID
 from one_report.settings import DATE
-from one_report.settings import SIGNIN_URL
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from oauth2client.crypt import AppIdentityError
+from oauth2client.client import verify_id_token
+from report.serializers import *
+from report.models import *
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from datetime import datetime
+from django.db import *
 from django.shortcuts import redirect
-from django.contrib.auth import logout
+import json
+from one_report.settings import CONSTANT_PASSWORD
+from one_report.settings import SIGNIN_URL
+from one_report.settings import SIGNUP_URL
+from one_report.settings import NEXT
+import json
 
 import re
 
@@ -51,14 +51,11 @@ import re
 class ReportList(APIView):
 
     def get(self, request):
+        # is response None, everything good. else return tuple (text, response status)
+        response_val = authenticate_google_token_id(request)
 
-        # constant code authentication in all requests.
-        google_token_id = request.GET.get(GOOGLE_TOKEN_ID)
-        if google_token_id is None:
-            return Response('no token is provided', status=status.HTTP_403_FORBIDDEN)
-        if not request.user.is_authenticated():
-            return redirect(SIGNIN_URL + '?google-token-id=' + google_token_id + '&next=' + str(request.get_full_path()))
-        # constant code ends here.
+        if response_val is not None:
+            return Response(response_val[0], status=response_val[1])
 
         unit_id = request.GET.get(UNIT_ID)
         chosen_date = request.GET.get(DATE)
@@ -181,13 +178,11 @@ class ReportEntryDetail(APIView):
     #     return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        # constant code authentication in all requests.
-        google_token_id = request.GET.get(GOOGLE_TOKEN_ID)
-        if google_token_id is None:
-            return Response('no token is provided', status=status.HTTP_403_FORBIDDEN)
-        if not request.user.is_authenticated():
-            return redirect(SIGNIN_URL + '?google-token-id=' + google_token_id + '&next=' + str(request.get_full_path()))
-        # constant code ends here.
+        # is response None, everything good. else return tuple (text, response status)
+        response_val = authenticate_google_token_id(request)
+
+        if response_val is not None:
+            return Response(response_val[0], status=response_val[1])
 
         report_entry = self.get_object(pk)
         serializer = ReportEntryUpdateSerializer(report_entry, data=request.data)
@@ -201,17 +196,62 @@ class ReportEntryDetail(APIView):
     #     report_entry.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class UnitList(APIView):
 
     def get(self, request, format=None):
-        # constant code authentication in all requests.
-        google_token_id = request.GET.get(GOOGLE_TOKEN_ID)
-        if google_token_id is None:
-            return Response('no token is provided', status=status.HTTP_403_FORBIDDEN)
-        if not request.user.is_authenticated():
-            return redirect(SIGNIN_URL + '?google-token-id=' + google_token_id + '&next=' + str(request.get_full_path()))
-        # constant code ends here.
+        # is response None, everything good. else return tuple (text, response status)
+        response_val = authenticate_google_token_id(request)
+
+        if response_val is not None:
+            return Response(response_val[0], status=response_val[1])
 
         units_returned = Unit.objects.all()
         serializer = UnitSerializer(units_returned, many=True)
         return Response(serializer.data)
+
+
+# receives request for service, check validity of the google token id,
+# and login to the appropriate user (if not exist, creates it.
+# returns tuple of (message response, status response)
+# if None then success.
+def authenticate_google_token_id(request):
+    google_token_id = request.GET.get(GOOGLE_TOKEN_ID)
+    if google_token_id is None:
+        return ('no token is provided', status.HTTP_403_FORBIDDEN)
+
+    # Update client_secrets.json with your Google API project information.
+    # Do not change this assignment.
+    CLIENT_ID = json.loads(
+        open('client_secret.json', 'r').read())['web']['client_id']
+
+    try:
+        # Client library can verify the ID token.
+        jwt = verify_id_token(google_token_id, CLIENT_ID)
+        gid = jwt['sub']
+        email = jwt['email']
+
+    # failed authentication with google
+    except AppIdentityError:
+        return ('google token id provided is invalid', status.HTTP_403_FORBIDDEN)
+
+    # checks if user exists. if not, then creates.
+    exists = User.objects.all().filter(username=email).exists()
+    if not exists:
+        try:
+            user = User.objects.create_user(email, password=CONSTANT_PASSWORD)
+            user.save()
+        except IntegrityError:
+            # shouldn't happen
+            return ('user creation error', status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # user is created now.
+
+    # up to now validated google token id. now logs in using django auth system.
+    user = authenticate(username=email, password=CONSTANT_PASSWORD)
+
+    # shouldn't happen
+    if user is None:
+        return ('login error', status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    login(request, user=user)
+    return None

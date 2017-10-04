@@ -21,6 +21,10 @@ from datetime import datetime
 from django.db import *
 from django.shortcuts import redirect
 import json
+from one_report.settings import CONSTANT_PASSWORD
+from one_report.settings import SIGNIN_URL
+from one_report.settings import SIGNUP_URL
+from one_report.settings import NEXT
 import re
 
 
@@ -37,12 +41,10 @@ import re
 #             2.3.2.1 only if user belongs to the group for the unit of the group
 
 
-CONSTANT_PASSWORD = 'Aa123456'
-
 @api_view(['GET'])
 def create_user(request):
     user_name = request.GET.get('user_name')
-    next_path = request.GET.get('next')
+    next_path = request.GET.get(NEXT)
     if user_name is None:
         return Response('please include a user name', status=status.HTTP_400_BAD_REQUEST)
 
@@ -52,7 +54,7 @@ def create_user(request):
     except IntegrityError:
         return Response('user name already exist', status=status.HTTP_409_CONFLICT)
     if next_path is not None:
-        return redirect(next)
+        return redirect(next_path)
     return Response('user created successfully', status=status.HTTP_201_CREATED)
 
 
@@ -73,7 +75,7 @@ def create_group(request):
 
 @api_view(['GET'])
 def signin(request):
-    next_path = request.GET.get('next')
+    next_path = request.GET.get(NEXT)
     google_token_id = request.GET.get('google-token-id')
     if google_token_id is None:
         return Response('no token is provided', status=status.HTTP_403_FORBIDDEN)
@@ -96,10 +98,14 @@ def signin(request):
     # checks if user exists. if not, then creates.
     exists = User.objects.all().filter(username=email).exists()
     if not exists:
-        if next_path is not None:
-            return redirect('/account/signup/?user_name=' + email + '&next=/account/signin/?next=' + next_path)
-        else:
-            return redirect('/account/signup/?user_name=' + email)
+        try:
+            user = User.objects.create_user(email, password=CONSTANT_PASSWORD)
+            user.save()
+        except IntegrityError:
+            #shouldn't happen
+            return Response('user creating error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        #user is created now.
+
     # up to now validated google token id. now logs in using django auth system.
     user = authenticate(username=email, password=CONSTANT_PASSWORD)
 
@@ -111,7 +117,7 @@ def signin(request):
 
     # redirect
     if next_path is not None:
-        return redirect(next)
+        return redirect(next_path)
     return Response('successful login to ' + str(user), status=status.HTTP_200_OK)
 
 

@@ -151,6 +151,20 @@ TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )
 
-LOGIN_URL = '/account/login/'
+#needed for login_required.
+LOGIN_URL = '/account/signin/'
+
+#program constants.
+SIGNIN_URL = '/account/signin/'
+SIGNUP_URL = '/account/signup/'
+
+#creates users with this password.
+CONSTANT_PASSWORD = 'Aa123456'
+
+#GET parameters
+GOOGLE_TOKEN_ID = 'google-token-id'
+UNIT_ID = 'unit'
+DATE = 'date'
+NEXT = 'next'
 
 GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = 'client_secrets.json'

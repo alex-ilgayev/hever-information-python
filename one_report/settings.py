@@ -147,10 +147,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR,  'templates'),
-)
-
 #needed for login_required.
 LOGIN_URL = '/account/signin/'
 

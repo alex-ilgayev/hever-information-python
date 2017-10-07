@@ -1,3 +1,5 @@
+from django.http import Http404
+
 from one_report.settings import GOOGLE_TOKEN_ID
 from one_report.settings import UNIT_ID
 from one_report.settings import DATE
@@ -166,11 +168,11 @@ class ReportEntryDetail(APIView):
     """
     Retrieve, update or delete a snippet instance.
     """
-    # def get_object(self, pk):
-    #     try:
-    #         return ReportEntry.objects.get(pk=pk)
-    #     except ReportEntry.DoesNotExist:
-    #         raise Http404
+    def get_object(self, pk):
+        try:
+            return ReportEntry.objects.get(pk=pk)
+        except ReportEntry.DoesNotExist:
+            raise Http404
     #
     # def get(self, request, pk, format=None):
     #     report_entry = self.get_object(pk)

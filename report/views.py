@@ -110,20 +110,21 @@ class ReportList(APIView):
 
             single_report = Report.objects.create(date=chosen_datetime, unit=chosen_unit[0])
 
-            # some glitch
-            # because I can't add permission non-programtically, checking if permission exists, and create it.
-            content_type = ContentType.objects.get_for_model(Unit)
-            Permission.objects.get_or_create(codename='can_read_unit_' + str(single_report.unit_id),
-                                                               name='Can Read Unit ' + str(single_report.unit_id),
-                                                               content_type=content_type)
-            Permission.objects.get_or_create(codename='can_update_unit_' + str(single_report.unit_id),
-                                                               name='Can Update Unit ' + str(single_report.unit_id),
-                                                               content_type=content_type)
-
             persons = Person.objects.all().filter(unit_id=unit_id)
             for person in persons:
                 ReportEntry.objects.create(person=person, status='NOT_SET', report=single_report)
             reports_returned = [single_report]
+
+        # some glitch
+        # because I can't add permission non-programtically, checking if permission exists, and create it.
+        content_type = ContentType.objects.get_for_model(Unit)
+        for report in reports_returned:
+            Permission.objects.get_or_create(codename='can_read_unit_' + str(report.unit_id),
+                                             name='Can Read Unit ' + str(report.unit_id),
+                                             content_type=content_type)
+            Permission.objects.get_or_create(codename='can_update_unit_' + str(report.unit_id),
+                                             name='Can Update Unit ' + str(report.unit_id),
+                                             content_type=content_type)
 
         # check permission to see.
         permitted_reports = [report for report in reports_returned if

@@ -103,8 +103,8 @@ DATABASES = {
         'NAME': 'd6ik94eb3rkgo9',
         'USER': 'eycyxwkjrbcbxs',
         'PASSWORD': '4dacac10deb61b912d1365d3c6c81c57be7d4c45418c5e236afa26130d358d41',
-        # 'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
-        'HOST': 'localhost',
+        'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
+        # 'HOST': 'localhost',
         'PORT': '',
     }
 }

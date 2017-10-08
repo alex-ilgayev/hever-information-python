@@ -1,3 +1,0 @@
-1. make google token pass via POST
-2. set debug=false
-3. make signin and signup accessible only within the domain

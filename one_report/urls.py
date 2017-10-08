@@ -14,10 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import include, url
-from django.contrib import admin
-from django.conf.urls.static import static
-
-import one_report
+from django.contrib import admins
 
 urlpatterns = [
     url(r'^report/', include('report.urls')),

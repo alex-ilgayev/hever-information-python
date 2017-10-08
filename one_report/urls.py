@@ -15,9 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.conf.urls.static import static
+
+import one_report
 
 urlpatterns = [
     url(r'^report/', include('report.urls')),
     url(r'^account/', include('account.urls')),
     url(r'^admin/', admin.site.urls),
-]
+] + static(one_report.settings.STATIC_URL, document_root=one_report.settings.STATIC_ROOT)

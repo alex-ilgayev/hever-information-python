@@ -41,16 +41,14 @@ SECRET_KEY = 'b!48d&is5q60)zpv95mkq=ot(rielk2#m&!4s&w)+efk_)1_#s'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', 'one-report.herokuapp.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework',
-    'googleapiclient',
-    'report.apps.ReportConfig',
-    'account.apps.AccountConfig',
+    'geo_report.apps.GeoReportConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,7 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'one_report.urls'
+ROOT_URLCONF = 'hever_information.urls'
 
 TEMPLATES = [
     {
@@ -91,7 +89,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'one_report.wsgi.application'
+WSGI_APPLICATION = 'hever_information.wsgi.application'
 
 
 # Database
@@ -105,14 +103,18 @@ WSGI_APPLICATION = 'one_report.wsgi.application'
 # }
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': 'd6ik94eb3rkgo9',
+    #     'USER': 'eycyxwkjrbcbxs',
+    #     'PASSWORD': '4dacac10deb61b912d1365d3c6c81c57be7d4c45418c5e236afa26130d358d41',
+    #     'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
+    #     # 'HOST': 'localhost',
+    #     'PORT': '',
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd6ik94eb3rkgo9',
-        'USER': 'eycyxwkjrbcbxs',
-        'PASSWORD': '4dacac10deb61b912d1365d3c6c81c57be7d4c45418c5e236afa26130d358d41',
-        'HOST': 'ec2-54-75-249-162.eu-west-1.compute.amazonaws.com',
-        # 'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
 }
 
@@ -148,20 +150,5 @@ USE_L10N = True
 
 USE_TZ = True
 
-#needed for login_required.
-LOGIN_URL = '/account/signin/'
-
-#program constants.
-SIGNIN_URL = '/account/signin/'
-SIGNUP_URL = '/account/signup/'
-
-#creates users with this password.
-CONSTANT_PASSWORD = 'Aa123456'
-
-#GET parameters
-GOOGLE_TOKEN_ID = 'google-token-id'
-UNIT_ID = 'unit'
+#date parameters in get request.
 DATE = 'date'
-NEXT = 'next'
-
-GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = 'client_secrets.json'

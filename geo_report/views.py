@@ -1,82 +1,27 @@
 from django.http import Http404
 from django.contrib.contenttypes.models import ContentType
-from one_report.settings import GOOGLE_TOKEN_ID
-from one_report.settings import UNIT_ID
-from one_report.settings import DATE
+from hever_information.settings import DATE
 from django.contrib.auth.models import User, Permission
 from django.contrib.auth import authenticate, login
 from oauth2client.crypt import AppIdentityError
 from oauth2client.client import verify_id_token
-from report.serializers import *
-from report.models import *
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import datetime
 from django.db import *
-from django.shortcuts import redirect
-import json
-from one_report.settings import CONSTANT_PASSWORD
-from one_report.settings import SIGNIN_URL
-from one_report.settings import SIGNUP_URL
-from one_report.settings import NEXT
+from geo_report.serializers import *
 import json
 
 import re
 
-# class ReportToday(APIView):
-#
-#     def get(self, request, format=None):
-#         unit_id = request.GET.get(UNIT_ID)
-#         if unit_id is None or not unit_id.isdigit():
-#             return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
-#
-#         chosen_unit = Unit.objects.all().filter(id=unit_id)
-#         if chosen_unit is None or len(chosen_unit) < 1:
-#             return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
-#         chosen_unit = chosen_unit[0]
-#
-#         single_report = Report.objects.all().filter(unit=unit_id).filter(date=date.today())
-#         if len(single_report) == 0:
-#             # if no report for today is made yet, making one, and adding all relevant people with NOT_SET status.
-#             single_report = [Report.objects.create(date=date.today(), unit=chosen_unit)]
-#             single_report = single_report[0]
-#             persons = Person.objects.all().filter(unit_id=unit_id)
-#             for person in persons:
-#                 ReportEntry.objects.create(person=person, status='NOT_SET', report=single_report)
-#         else:
-#             single_report = single_report[0]
-#         serializer = ReportSerializer(single_report)
-#         return Response(serializer.data)
+class GeoReportList(APIView):
 
-
-class ReportList(APIView):
-
-    # GET request for all reports with 2 parameters:
-    # 'unit' - unit id
-    # 'date' - date in format of 10-12-2017
-    # returns report according to filters, with proper authorization.
+    #receiving date in parameters.
     def get(self, request):
-        # is response None, everything good. else return tuple (text, response status)
-        response_val = authenticate_google_token_id(request)
 
-        if response_val is not None:
-            return Response(response_val[0], status=response_val[1])
-
-        unit_id = request.GET.get(UNIT_ID)
         chosen_date = request.GET.get(DATE)
-
-        reports_returned = Report.objects.all()
-        # checking validity of parameters
-        if unit_id is not None:
-            if not unit_id.isdigit():
-                return Response('Enter unit number like \'unit=818\'', status=status.HTTP_400_BAD_REQUEST)
-
-            chosen_unit = Unit.objects.all().filter(id=unit_id)
-            if chosen_unit is None or len(chosen_unit) < 1:
-                return Response('No such unit exist', status=status.HTTP_400_BAD_REQUEST)
-
-            reports_returned = reports_returned.filter(unit=unit_id)
+        geo_reports_returned = GeoReport.objects.all()
 
         # checking validity of parameters
         if chosen_date is not None:
@@ -103,44 +48,17 @@ class ReportList(APIView):
             chosen_datetime = datetime(year=year, month=month, day=day)
 
             chosen_datetime = chosen_datetime.strftime('%Y-%m-%d')
-            reports_returned = reports_returned.filter(date=chosen_datetime)
+            geo_reports_returned = geo_reports_returned.filter(timestamp__gt=chosen_datetime)
 
-        # if theres no report for given date we creating one.
-        if chosen_date is not None and unit_id is not None and len(reports_returned) == 0:
-
-            single_report = Report.objects.create(date=chosen_datetime, unit=chosen_unit[0])
-
-            persons = Person.objects.all().filter(unit_id=unit_id)
-            for person in persons:
-                ReportEntry.objects.create(person=person, status='NOT_SET', report=single_report)
-            reports_returned = [single_report]
-
-        # some glitch
-        # because I can't add permission non-programtically, checking if permission exists, and create it.
-        content_type = ContentType.objects.get_for_model(Unit)
-        for report in reports_returned:
-            Permission.objects.get_or_create(codename='can_read_unit_' + str(report.unit_id),
-                                             name='Can Read Unit ' + str(report.unit_id),
-                                             content_type=content_type)
-            Permission.objects.get_or_create(codename='can_update_unit_' + str(report.unit_id),
-                                             name='Can Update Unit ' + str(report.unit_id),
-                                             content_type=content_type)
-
-        # check permission to see.
-        permitted_reports = [report for report in reports_returned if
-                             request.user.has_perm('report.can_read_unit_' + str(report.unit_id))]
-        # permitted_reports = reports_returned
-
-
-        serializer = ReportSerializer(permitted_reports, many=True)
+        serializer = GeoReportSerializer(geo_reports_returned, many=True)
         return Response(serializer.data)
 
-    # def post(self, request, format=None):
-    #     serializer = ReportSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, format=None):
+        serializer = GeoReportSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class ReportDetail(APIView):
@@ -154,21 +72,21 @@ class ReportList(APIView):
 #             raise Http404
 #
 #     def get(self, request, pk, format=None):
-#         report = self.get_object(pk)
-#         serializer = ReportSerializer(report)
+#         geo_report = self.get_object(pk)
+#         serializer = ReportSerializer(geo_report)
 #         return Response(serializer.data)
 #
 #     def put(self, request, pk, format=None):
-#         report = self.get_object(pk)
-#         serializer = ReportSerializer(report, data=request.data)
+#         geo_report = self.get_object(pk)
+#         serializer = ReportSerializer(geo_report, data=request.data)
 #         if serializer.is_valid():
 #             serializer.save()
 #             return Response(serializer.data)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #
 #     def delete(self, request, pk, format=None):
-#         report = self.get_object(pk)
-#         report.delete()
+#         geo_report = self.get_object(pk)
+#         geo_report.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -213,7 +131,7 @@ class ReportEntryDetail(APIView):
         report_entry = self.get_object(pk)
 
         # check permission to update.
-        if not request.user.has_perm('report.can_update_unit_' + str(report_entry.report.unit_id)):
+        if not request.user.has_perm('geo_report.can_update_unit_' + str(report_entry.report.unit_id)):
             return Response('no permission for doing the operation', status=status.HTTP_403_FORBIDDEN)
 
         serializer = ReportEntryUpdateSerializer(report_entry, data=request.data)

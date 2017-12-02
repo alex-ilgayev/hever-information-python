@@ -1,1 +1,1 @@
-web: gunicorn one_report.wsgi
+web: gunicorn hever_information.wsgi
